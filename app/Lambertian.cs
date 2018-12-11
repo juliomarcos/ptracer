@@ -11,7 +11,7 @@ namespace app
 
         public override bool Scatter(Ray rayIn, ref HitRecord hitRecord, out Vector3 attenuation, out Ray scattered)
         {
-            Vector3 target = hitRecord.p + hitRecord.normal + MyRandom.PointInUnitSphere2();
+            Vector3 target = hitRecord.p + hitRecord.normal + MyRandom.PointInUnitSphere();
             scattered = new Ray(hitRecord.p, target - hitRecord.p);
             attenuation = albedo;
             return true;

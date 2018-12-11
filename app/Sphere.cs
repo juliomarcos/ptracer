@@ -1,4 +1,5 @@
 using System;
+using System.Security.Cryptography;
 
 namespace app
 {
@@ -24,41 +25,57 @@ namespace app
         
         public bool DoesIntersect(Ray ray, float tMin, float tMax, ref HitRecord hitRecord)
         {
-            Vector3 L = center - ray.origin;
-            float tca = L.Dot(ray.direction.Normalized);
-            if (tca < 0)
+// GEOMETRIC SOLUTION. DOESN'T WORK, DON'T KNOW WHY            
+//            Vector3 L = center - ray.origin;
+//            double tca = L.Dot(ray.direction.Normalized);
+//            if (tca < 0) return false;
+//            double d2 = L.SqrMagnitude - tca * tca;
+//            double r2 = radius * radius;
+//            if (d2 > r2) return false;
+//            double thc = Math.Sqrt(r2 - d2);
+//            double t0 = tca - thc;
+//            double t1 = tca + thc; // this should be test for both points
+//            float t = (float) Math.Min(t0, t1);
+//            if (t > tMin && t < tMax)
+//            {
+//                hitRecord.t = t;
+//                hitRecord.p = ray.PointAt(t);
+//                hitRecord.normal = (hitRecord.p - center) / radius;
+//                hitRecord.material = material;
+//                return true;
+//            }
+//            return false;
+            
+            Vector3 oc = ray.origin - center;
+            float a = ray.direction.SqrMagnitude;
+            float b = oc.Dot(ray.direction);
+            float c = oc.SqrMagnitude - radius * radius;
+            float discriminant = b * b - a * c;
+            if (discriminant > 0)
             {
-                // L and D are in opposite directions, no intersection happens
-                hitRecord.t = float.MaxValue;
-                return false;
+                float t = (-b - MathF.Sqrt(b * b - a * c)) / a;
+                if (t > tMin && t < tMax)
+                {
+                    FillHitRecord(ray, out hitRecord, t);
+                    return true;
+                }
+                t = (-b + MathF.Sqrt(b * b - a * c)) / a;
+                if (t > tMin && t < tMax)
+                {
+                    FillHitRecord(ray, out hitRecord, t);
+                    return true;
+                }
             }
-            float d2 = L.SqrMagnitude - tca * tca;
-            float r2 = radius * radius;
-            if (d2 > r2)
-            {
-                hitRecord.t = float.MaxValue;
-                return false;
-            }
-            float thc = MathF.Sqrt(r2 - d2);            
-            float t0 = tca - thc;
-            if (t0 > tMin && t0 < tMax)
-            {
-                hitRecord.t = t0;
-                hitRecord.p = ray.PointAt(t0);
-                hitRecord.normal = (hitRecord.p - center) / radius;
-                hitRecord.material = material;
-                return true;
-            }
-            float t1 = tca + thc; // this should be test for both roots
-            if (t1 > tMin && t1 < tMax)
-            {
-                hitRecord.t = t1;
-                hitRecord.p = ray.PointAt(t1);
-                hitRecord.normal = (hitRecord.p - center) / radius;
-                hitRecord.material = material;
-                return true;
-            }
+
             return false;
+        }
+
+        private void FillHitRecord(Ray ray, out HitRecord hitRecord, float t)
+        {
+            hitRecord.t = t;
+            hitRecord.p = ray.PointAt(t);
+            hitRecord.normal = (hitRecord.p - center) / radius;
+            hitRecord.material = material;
         }
     }
 }
